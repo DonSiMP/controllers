@@ -1,0 +1,68 @@
+// **PID TASK SPACE CONTROLLER**
+
+// Import from RTT_COMPONENT_PATH.
+import("rtt_ros")
+//import("OCL::FileReporting")
+import("rtt_roscom")
+
+// Imports from ROS_PACKAGE_PATH.
+ros.import("controllers")
+ros.import("rtt_gazebo_interface")
+ros.import("trajectory_generators")
+
+                      // ("Instance name", "Component name")
+loadComponent("RandomWaypointArrayGenerator", "RandomWaypointArrayGenerator")
+loadComponent("CartesianTrajectory", "CartesianTrajectory")
+loadComponent("PIDtaskSpace", "PIDtaskSpace")
+loadComponent("GazeboInterface", "GazeboInterface")
+//loadComponent("reporter", "OCL::FileReporting")
+
+             // ("Instance name", period, priority, scheduler)
+setActivity("RandomWaypointArrayGenerator", 0.005, 50, ORO_SCHED_RT)
+setActivity("CartesianTrajectory", 0.001, 70, ORO_SCHED_RT)
+setActivity("PIDtaskSpace", 0.001, 60, ORO_SCHED_RT)
+//setActivity("reporter", 0.001, 60, ORO_SCHED_RT)
+
+//connectPeers("reporter", "PIDtaskSpace")
+//reporter.reportComponent("PIDtaskSpace")
+//reporter.ReportFile = "/home/dan/file.dat"
+
+
+// Buffered connection policy.
+var ConnPolicy Buffer1
+Buffer1.type = BUFFER 
+Buffer1.size = 30
+Buffer1.lock_policy = LOCK_FREE
+
+// Send cartesian waypoints to the trajectory generator.
+connect("RandomWaypointArrayGenerator.trajectory_waypoint_vector", "CartesianTrajectory.trajectory_waypoint_vector", Buffer1)
+
+// Send desired states from trajectory generator ports to controller. 
+connect("CartesianTrajectory.desired_trajectory_pos", "PIDtaskSpace.desired_trajectory_pos", Buffer1)
+connect("CartesianTrajectory.desired_trajectory_vel", "PIDtaskSpace.desired_trajectory_vel", Buffer1)
+
+// Send start pose from controller to trajectory generator.
+connect("PIDtaskSpace.start_pose_to_trajec_gen", "CartesianTrajectory.trajectory_waypoint_vector", Buffer1)
+
+// Send joint states from gazebo to controller.
+connect("GazeboInterface.joint_states_from_gazebo", "PIDtaskSpace.current_joint_states", Buffer1)
+
+// Send torque commands from controller to gazebo.
+connect("PIDtaskSpace.torque_commands", "GazeboInterface.torque_commands_to_gazebo", Buffer1)
+
+// Call configureHook()
+//configureComponent("reporter")
+configureComponent("GazeboInterface")
+configureComponent("RandomWaypointArrayGenerator")
+configureComponent("CartesianTrajectory")
+configureComponent("PIDtaskSpace")
+
+// Call startHook()
+//startComponent("reporter")
+startComponent("RandomWaypointArrayGenerator")
+startComponent("CartesianTrajectory")
+startComponent("PIDtaskSpace")
+startComponent("GazeboInterface")  
+
+// Publish torque commands to a ROS topic. (for RQT or whatever)
+stream("PIDtaskSpace.torque_commands", ros.comm.topic("/torque_commands"))	     				

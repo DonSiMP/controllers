@@ -1,0 +1,47 @@
+// **PID JOINT SPACE CONTROLLER**
+
+// Import from RTT_COMPONENT_PATH.
+import("rtt_ros")
+
+// Import from ROS_PACKAGE_PATH.
+ros.import("controllers")
+ros.import("rtt_gazebo_interface")
+ros.import("trajectory_generators")
+
+                     // ("Instance name", "Component name")
+loadComponent("RandomWaypointGenerator", "RandomWaypointGenerator")
+loadComponent("PIDjointSpace", "PIDjointSpace")
+loadComponent("GazeboInterface", "GazeboInterface")
+
+             // ("Instance name", period, priority, scheduler)
+setActivity("RandomWaypointGenerator", 0.01, 50, ORO_SCHED_RT)
+setActivity("PIDjointSpace", 0.001, 70, ORO_SCHED_RT)
+
+// Publish torque commands to a ROS topic. (for RQT or whatever)
+stream("PIDjointSpace.torque_commands", ros.comm.topic("/joint_states"))
+
+// Buffered connection policy.
+var ConnPolicy Buffer1
+Buffer1.type = BUFFER 
+Buffer1.size = 30
+Buffer1.lock_policy = LOCK_FREE
+
+// Send cartesian waypoint to the controller.
+connect("RandomWaypointGenerator.trajectory_goal_pose", "PIDjointSpace.trajectory_goal_pose", Buffer1)
+
+// Send joint states from gazebo to controller.
+connect("GazeboInterface.joint_states_from_gazebo", "PIDjointSpace.joint_states", Buffer1)
+
+// Send torque commands from controller to gazebo.
+connect("PIDjointSpace.torque_commands", "GazeboInterface.torque_commands_to_gazebo", Buffer1)
+
+// Call configureHook()
+configureComponent("GazeboInterface")
+configureComponent("PIDjointSpace")
+configureComponent("RandomWaypointGenerator")
+
+// Call startHook()
+startComponent("RandomWaypointGenerator")
+startComponent("GazeboInterface")
+startComponent("PIDjointSpace")
+

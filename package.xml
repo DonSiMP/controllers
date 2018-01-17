@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<package format="2">
+
+  <name>controllers</name>
+  <version>1.0.0</version>
+  <description>The controllers package</description>
+  <maintainer email="danielscodeemail@gmail.com">dan</maintainer>
+  <license>BSD</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <depend>rtt_ros_tools</depend>
+  <depend>trajectory_generators</depend>
+  <depend>rtt</depend>
+  <depend>rtt_ros</depend>
+  <depend>rtt_roscomm</depend>
+  <depend>rtt_rosclock</depend>
+  <depend>orocos_kdl</depend>
+  <depend>ros_cpp</depend>
+  <depend>trac_ik_lib</depend>
+  <depend>eigen_conversions</depend>
+  <depend>kdl_conversions</depend>
+  <depend>rtt_geometry_msgs</depend>
+  <depend>rtt_sensor_msgs</depend>
+  <depend>tf</depend>
+
+  <export>
+    <rtt_ros>
+      <plugin_depend>rtt_geometry_msgs</plugin_depend>
+      <plugin_depend>rtt_sensor_msgs</plugin_depend>
+      <plugin_depend>rtt_rospack</plugin_depend>
+      <plugin_depend>rtt_roscomm</plugin_depend>
+      <plugin_depend>rtt_rosparam</plugin_depend>
+    </rtt_ros>
+  </export>
+
+</package>

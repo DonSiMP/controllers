@@ -1,0 +1,44 @@
+<?xml version="2.0" encoding="UTF-8" ?>
+
+<launch>
+
+  <include file = "$(find lwr_description)/launch/lwr_upload.launch"/>
+
+  <rosparam>
+
+RandomWaypointGenerator/frame_id: "base_link"
+
+ComputedTorqueJointSpace/tranform_waypoints_to_new_frame: false
+
+root_link: "link_0"
+tip_link: "link_7"
+end_effector_frame_name: "link_7"
+
+solver_type: "Speed" 
+max_solve_time: 0.005
+error: 0.00001
+
+joint_P_gains: [1080.0, 1080.0, 1080.0, 1080.0, 1080.0, 1080.0, 1080.0]
+joint_I_gains: [5,5,5,5,5,5,5]
+joint_D_gains: [50,50,50,50,50,50,50]
+
+joint_start_pose: [0.2,0.2,0.2,0.2,0.2,0.2,0.2]
+
+joint_accel_lims: [0.5,0.5,0.5,0.5,0.5,0.5,0.5]
+
+joint_space_velocity_profile: "cubic_polynomial"
+
+use_joint_vel_lims: true
+use_joint_acc_lims: false
+
+gazebo_world_path: "/usr/share/gazebo-8/worlds/empty.world"
+
+  </rosparam>
+
+  <include file = "$(find rtt_ros)/launch/deployer.launch">
+    <arg name = "DEPLOYER_ARGS" value = "-s $(find controllers)/scripts/computed_torque_joint_space.ops"/>
+    <arg name = "LOG_LEVEL" value = "debug"/>
+    <arg name = "DEBUG" value = "true"/>
+  </include>
+
+</launch>

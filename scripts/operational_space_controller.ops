@@ -1,0 +1,58 @@
+// **OPERATIONAL SPACE CONTROLLER**
+
+// Imports from RTT_COMPONENT_PATH.
+import("rtt_ros")
+
+// Imports from ROS_PACKAGE_PATH.
+ros.import("controllers")
+ros.import("rtt_gazebo_interface")
+ros.import("trajectory_generators")
+
+                       // ("Instance name", "Component name")
+loadComponent("RandomWaypointArrayGenerator","RandomWaypointArrayGenerator")
+loadComponent("CartesianTrajectory","CartesianTrajectory")
+loadComponent("OperationalSpaceControl","OperationalSpaceControl")
+loadComponent("GazeboInterface","GazeboInterface")
+
+            // ("Instance name", period, priority, scheduler)
+setActivity("RandomWaypointArrayGenerator", 0.001, 50, ORO_SCHED_RT)
+setActivity("CartesianTrajectory", 0.001, 70, ORO_SCHED_RT)
+setActivity("OperationalSpaceControl", 0.001, 70, ORO_SCHED_RT)
+
+// Publish torque commands to a ROS topic. (for RQT or whatever)
+stream("OperationalSpaceControl.torque_commands", ros.comm.topic("/joint_states"))
+
+//Buffered connection policy.
+var ConnPolicy Buffer1
+Buffer1.type = BUFFER 
+Buffer1.size = 30
+Buffer1.lock_policy = LOCK_FREE
+
+// Send cartesian waypoints to the trajectory generator.
+connect("RandomWaypointArrayGenerator.trajectory_waypoint_vector", "CartesianTrajectory.trajectory_waypoint_vector", ConnPolicy())
+
+// Send desired states from trajectory generator ports to controller. 
+connect("CartesianTrajectory.desired_trajectory_pos", "OperationalSpaceControl.desired_trajectory_pos", Buffer1)
+connect("CartesianTrajectory.desired_trajectory_vel", "OperationalSpaceControl.desired_trajectory_vel", Buffer1)
+connect("CartesianTrajectory.desired_trajectory_acc", "OperationalSpaceControl.desired_trajectory_acc", Buffer1)
+
+// Send start pose from controller to trajectory generator.
+connect("OperationalSpaceControl.start_pose_to_trajec_gen", "CartesianTrajectory.trajectory_waypoint_vector", Buffer1)
+
+// Send joint states from gazebo to controller.
+connect("GazeboInterface.joint_states_from_gazebo", "OperationalSpaceControl.current_joint_states", Buffer1)
+
+// Send torque commands from controller to gazebo.
+connect("OperationalSpaceControl.torque_commands", "GazeboInterface.torque_commands_to_gazebo", Buffer1)
+
+// Call configureHook()
+configureComponent("RandomWaypointArrayGenerator")
+configureComponent("CartesianTrajectory")
+configureComponent("OperationalSpaceControl")
+configureComponent("GazeboInterface")
+
+// Call startHook()
+startComponent("RandomWaypointArrayGenerator")
+startComponent("CartesianTrajectory")
+startComponent("GazeboInterface")
+startComponent("OperationalSpaceControl")

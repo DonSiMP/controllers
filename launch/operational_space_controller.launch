@@ -1,0 +1,42 @@
+<?xml version="2.0" encoding="UTF-8" ?>
+
+<launch>
+
+  <include file = "$(find lwr_description)/launch/lwr_upload.launch"/>
+
+  <rosparam>
+
+RandomWaypointArrayGenerator/frame_id: "base_link"
+
+CartesianTrajectory/tranform_waypoints_to_new_frame: true
+CartesianTrajectory/frame_id: "base_link"
+
+root_link: "link_0"
+tip_link: "link_7"
+end_effector_frame_name: "link_7"
+
+task_space_velocity_profile: "trapezoidal"
+
+task_space_vel_limit: 0.1
+task_space_acc_limit: 2.0
+
+task_trajectory_corner_radius: 0.01  #Radius of rounded corners between way-points.
+task_trajectory_equivalent_radius: 0.05  #Equivalent radius to compare rotations/velocities.
+
+task_P_gains: [1080.0, 1080.0, 1080.0, 1080.0, 1080.0, 1080.0]
+task_I_gains: [5,5,5,5,5,5]
+task_D_gains: [50,50,50,50,50,50]
+
+joint_start_pose: [0,0.2,0.2,0.2,0.2,0.2,0.2]
+
+gazebo_world_path: "/usr/share/gazebo-8/worlds/empty.world"
+
+  </rosparam>
+
+  <include file = "$(find rtt_ros)/launch/deployer.launch">
+    <arg name = "DEPLOYER_ARGS" value = "-s $(find controllers)/scripts/operational_space_controller.ops"/>
+    <arg name = "LOG_LEVEL" value = "info"/>
+    <arg name = "DEBUG" value = "false"/>
+  </include>
+
+</launch>
